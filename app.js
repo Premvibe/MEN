@@ -16,31 +16,48 @@
 const express = require('express');
 const morgan = require('morgan')
 const app = express()
+const User = require('./models/user') // Importing the User model
+const dbconnection = require('./config/db') // Importing the database connection
+const userModel = require('./models/user') // Importing the user model
 
 
 app.use(morgan('dev')) // Logging middleware
+app.use(express.json()) // Middleware to parse JSON bodies
+app.use(express.urlencoded({ extended: true })) // Middleware to parse URL-encoded bodies
+app.use(express.static('public')) // Serve static files from the 'public' directory
 
 app.set("view engine", 'ejs')
 
 
+// app.use(
+//   // Middleware by user
+// //   (req, res, next) => {
+// //   console.log("Middleware is running")
+// //   const a = 10
+// //   const b = 20
+// //   console.log("Sum is: ", a + b) 
+// //  return next()
+// // }
+//   (req, res, next) => {
+//     // console.log("Middleware is running")
+//     next()
+//   }
+// )
 
-app.get('/',(req,res,next)=>{
-  const a=5;
-  const b=10;
-  const sum = a + b;
-  console.log(`Sum is: ${sum}`);
-  next();
-}, (req, res) => {
+app.get('/',
+  //third party middleware
+// (req, res,next) => {
+//   const a = 10
+//   const b = 20
+//   console.log("Sum is: ", a + b)
+//   next() // Call next middleware or route handler
+// },
+
+  (req, res) => {
   res.render('index')
 })
 
-app.get('/about',(req,res,next)=>{
-  const c=100;
-  const d=100;
-  const sum1 = c + d;
-  console.log(`Sum is: ${sum1}`);
-  next();
-}, (req, res) => {
+app.get('/about', (req, res) => {
   res.send("About Page")
 })
 app.get('/profile', (req, res) => {
@@ -52,4 +69,80 @@ app.get('/home', (req, res) => {
 }
 )
 
+
+
+app.get('/register', (req, res) => {
+  res.render('register')
+}
+)
+
+
+app.post('/register',async (req, res) => {
+  const { username, email, password } = req.body; // Destructure form data from the request body
+
+  const newUser = await  userModel.create({
+    username: username,
+    email: email,
+    password: password })
+
+    res.send(newUser) // Send the created user as a response
+  })
+  
+app.get('/get-users',(req, res) => {
+  // userModel.find({
+  //   username: 'a'
+  // })
+  //   .then(users => {
+  //     res.send(users) // Send the list of users as a response
+  //   })
+
+  userModel.findOne({
+    username: 'c'
+  })
+    .then(user => {
+      console.log(user) // Log the found user to the console
+      res.send(user) // Send the found user as a response
+    })
+ 
+  })
+
+
+  app.get('/update-user',async (req, res) => {
+    await userModel.findOneAndUpdate({
+      username: 'a'
+    }, {
+      email: "c@c.com"
+    })
+    res.send("User updated successfully") // Send a success message
+  })
+
+
+  app.get('/delete-user',async (req,res)=>{
+    await userModel.findOneAndDelete({
+      username: 'a'
+    })
+    res.send("User deleted successfully") // Send a success message
+  })
+
+
+
+
+
+//post= frontend to backend
+//get =server to frontend
+
+app.post ('/get-form-data', (req, res) => {
+  console.log(req.body) // Access form data from the request body
+  res.send("Form data received")
+
+})
+
+
+
+
+
+
+
 app.listen(3000)
+
+
